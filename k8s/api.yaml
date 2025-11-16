@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: study-app-api
+  namespace: study-app
+spec:
+  replicas: 1                       # SQLite → single replica
+  selector:
+    matchLabels: { app: study-app-api }
+  template:
+    metadata:
+      labels: { app: study-app-api }
+    spec:
+      containers:
+        - name: api
+          image: fabriziossr/study_app:latest   # <-- your API image
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8000 }]
+          envFrom:
+            - configMapRef: { name: study-app-config }
+          volumeMounts:
+            - name: data
+              mountPath: /data/temporal
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: study-app-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: study-app-api
+  namespace: study-app
+spec:
+  type: NodePort       # easy access in minikube
+  selector: { app: study-app-api }
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+      nodePort: 30080  # minikube will expose it

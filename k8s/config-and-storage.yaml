@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: study-app-config
+  namespace: study-app
+data:
+  USE_LLM: "false"                  # start simple; turn on later
+  GRADE_THRESHOLD: "0.62"
+  DB_PATH: "/data/temporal/exams.db"
+  RAG_ENABLED: "false"              # enable later if you’ve built the index
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: study-app-data
+  namespace: study-app
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
